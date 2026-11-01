@@ -1,49 +1,12 @@
-<!doctype html>
-<html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AI Fieldnotes — ฉบับเรียนรู้ใหม่</title>
-<meta name="description" content="เรียน AI ภาษาไทยแบบค่อยเป็นค่อยไป Lecture 29 บท Lab 36 บท พร้อมข้อสอบ 100 ข้อ">
-<style>body{background:#f2f4fa;color:#1e293b;font:16px/1.7 system-ui,sans-serif;margin:0}.load{min-height:100vh;display:grid;place-items:center}.load section{padding:28px;max-width:590px}.load h1{font-size:27px}.load p{color:#526078}</style>
-</head><body><main class="load"><section><h1>AI Fieldnotes — ฉบับเข้าใจง่าย</h1><p>กำลังเตรียมบทเรียน Lecture และ Lab ทั้งหมดในหน้าเดียว…</p></section></main>
-<script>
-(async function(){
-try{
-const paths=['source.html','onepage.patch.json','lecture-guides.json','lab-guides.json'];
-const responses=await Promise.all(paths.map(async path=>{const r=await fetch('./'+path);if(!r.ok)throw new Error('โหลด '+path+' ไม่สำเร็จ ('+r.status+')');return path.endsWith('.html')?r.text():r.json()}));
-const [original,patch,lecture,lab]=responses;
-const lines=original.match(/[^\n]*\n|[^\n]+$/g)||[];
-for(let i=patch.ops.length-1;i>=0;i--){
-const o=patch.ops[i],insert=o.insert.match(/[^\n]*\n|[^\n]+$/g)||[];
-lines.splice(o.start,o.remove,...insert);
-}
-if(lines.length!==patch.targetLineCount)throw new Error('จำนวนบรรทัดของคู่มือไม่ตรงกับเวอร์ชันที่รองรับ');
-let content=lines.join('');
-const begin=content.indexOf('<script id="lesson-data"');
-if(begin<0)throw new Error('ไม่พบชุดข้อมูลบทเรียน');
-const from=content.indexOf('>',begin)+1,to=content.indexOf('</'+'script>',from);
-if(from<=begin||to<0)throw new Error('แท็กข้อมูลบทเรียนไม่สมบูรณ์');
-const lessons=JSON.parse(content.slice(from,to));
-const guides={...lecture,...lab};
-const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-if(lessons.length!==65||Object.keys(guides).length!==65)throw new Error('จำนวนเนื้อหาไม่ครบ 65 บท');
-for(let i=0;i<lessons.length;i++){
-const x=lessons[i],parts=guides[x.id];
-if(!parts||parts.length!==4)throw new Error('คำอธิบายใหม่ของบท '+x.id+' ไม่ครบ');
-const [what,worked,how,warning]=parts;
-const detail=x.html.replace(/<details(?![^>]*\bopen\b)/g,'<details open');
-const lbl=x.track==='lab'?'LAB: ลงมือทำ':'LECTURE: ทำความเข้าใจ';
-x.html='<section class="beginner-guide" aria-label="คำอธิบายแบบเข้าใจง่าย">'+
-'<div class="beginner-head"><span>เรียนจากศูนย์ · '+lbl+'</span><strong>อ่านส่วนนี้ก่อน</strong></div>'+
-'<h2>เริ่มจากศูนย์: เรื่องนี้คืออะไร?</h2><p>'+escape(what)+'</p>'+
-'<h2>ลองดูเหตุการณ์และตัวเลขจริง</h2><div class="beginner-example">'+escape(worked)+'</div>'+
-'<h2>เวลาเจอในโค้ดหรือข้อสอบ ดูอะไรเป็นหลัก?</h2><p>'+escape(how)+'</p>'+
-'<div class="beginner-alert"><b>จุดที่มักเข้าใจผิด</b><p>'+escape(warning)+'</p></div>'+
-'</section><section class="source-explained"><div class="source-explained-title"><span>เรียนต่อจากพื้นฐาน</span><h2>เจาะลึก: สูตร ตาราง ทดลอง และโค้ดจากเอกสารเดิม</h2><p>เมื่อเข้าใจตัวอย่างด้านบนแล้ว อ่านรายละเอียดและทำ Lab ตามด้านล่างได้ทันที โดยไม่ต้องกดเปิดแต่ละบท</p></div>'+
-detail+'</section>';
-}
-content=content.slice(0,from)+JSON.stringify(lessons).replace(/<\//g,'<\\/')+content.slice(to);
-const css='<style>.beginner-guide{background:linear-gradient(135deg,#eff7ff,#f9fcff);border:1px solid #b8d9f6;border-radius:19px;padding:clamp(17px,3vw,27px);margin:20px 0 28px;line-height:1.95;color:#183451}.beginner-head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12px;color:#295b87;letter-spacing:.02em}.beginner-head strong{background:#dbeeff;border-radius:999px;padding:3px 10px}.beginner-guide h2{font-size:1.2rem;color:#113c66;margin:20px 0 8px}.beginner-guide p{margin:0 0 10px;line-height:1.95}.beginner-example{border-radius:12px;background:#fff;border:1px solid #c8dbed;padding:14px 17px;line-height:2;white-space:pre-line;font-weight:500}.beginner-alert{margin-top:21px;border-left:4px solid #e29d38;border-radius:8px;background:#fff7eb;padding:12px 16px;color:#5c4326}.beginner-alert p{margin:3px 0 0}.source-explained-title{padding:8px 0 14px;border-top:1px solid var(--border,#d9e2ec);margin:8px 0 12px}.source-explained-title span{font-size:.78rem;font-weight:700;color:#64748b}.source-explained-title h2{font-size:1.28rem;margin:6px 0 5px}.source-explained-title p{font-size:.91rem;color:var(--muted,#64748b)}[data-theme="dark"] .beginner-guide{background:#15253a;border-color:#355575;color:#d7e7fa}[data-theme="dark"] .beginner-guide h2{color:#9bceff}[data-theme="dark"] .beginner-example{background:#111f30;border-color:#355575}[data-theme="dark"] .beginner-alert{background:#3b2b1a;color:#ffddb2}@media print{.beginner-guide{break-inside:avoid}}</style>';
-content=content.replace('</head>',css+'</head>');
-document.open();document.write(content);document.close();
-}catch(e){const box=document.querySelector('.load section');box.innerHTML='<h1>ไม่สามารถเปิดบทเรียนได้</h1><p></p>';box.querySelector('p').textContent=String(e.message||e);}
-})();
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI Fieldnotes — เนื้อหาครบและแนวสอบ Final 1/2569</title><style>body{margin:0;background:#f2f4fa;color:#202b46;font:16px/1.8 system-ui,sans-serif}.load{max-width:650px;margin:20vh auto;padding:28px}.load p{color:#788299}</style></head><body><main class="load"><h1>AI Fieldnotes</h1><p>กำลังเปิดเนื้อหาฉบับเต็มและหน้าข้อสอบ…</p></main><script>
+(async()=>{try{
+const get=async(path,json)=>{const r=await fetch('./'+path);if(!r.ok)throw Error('โหลด '+path+' ไม่สำเร็จ ('+r.status+')');return json?r.json():r.text()};
+const [source,one,bundle]=await Promise.all([get('source.html'),get('onepage.patch.json',true),get('final-2569.bundle.json',true)]);
+const apply=(text,patch)=>{const lines=text.match(/[^\n]*\n|[^\n]+$/g)||[];if(patch.baseLineCount&&lines.length!==patch.baseLineCount)throw Error('รุ่นเนื้อหาต้นทางไม่ตรง');for(let i=patch.ops.length-1;i>=0;i--){const o=patch.ops[i];lines.splice(o.start,o.remove,...(o.insert.match(/[^\n]*\n|[^\n]+$/g)||[]))}if(lines.length!==patch.targetLineCount)throw Error('จำนวนบรรทัดเนื้อหาไม่ครบ');return lines.join('')};
+const baseline=apply(source,one);
+const bytes=Uint8Array.from(atob(bundle.data),x=>x.charCodeAt(0));
+const patch=JSON.parse(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
+if(crypto.subtle&&patch.baseSha256){const raw=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(baseline));const sha=Array.from(new Uint8Array(raw),x=>x.toString(16).padStart(2,'0')).join('');if(sha!==patch.baseSha256)throw Error('เนื้อหาต้นทางไม่ตรงกับฉบับที่ตรวจสอบ');}
+const content=apply(baseline,patch);document.open();document.write(content);document.close();
+}catch(e){const p=document.querySelector('.load p');if(p)p.textContent='เปิดบทเรียนไม่สำเร็จ: '+e.message;}})();
 </script></body></html>
